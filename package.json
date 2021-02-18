@@ -1,0 +1,32 @@
+{
+  "name": "lox-ts",
+  "version": "1.0.0",
+  "description": "TypeScript Implementation of Lox language as described in \"Crafting Interpreters\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cwood821/lox-ts.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cwood821/lox-ts/issues"
+  },
+  "homepage": "https://github.com/cwood821/lox-ts#readme",
+  "ava": {
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
+  },
+  "devDependencies": {
+    "ava": "^3.15.0",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.5"
+  }
+}
