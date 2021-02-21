@@ -4,6 +4,7 @@
   "description": "TypeScript Implementation of Lox language as described in \"Crafting Interpreters\"",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "test": "npx ava"
   },
   "repository": {
