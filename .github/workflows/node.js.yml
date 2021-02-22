@@ -1,4 +1,4 @@
-name: Tests lox-ts
+name: Build
 
 on:
   push:
