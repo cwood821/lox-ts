@@ -44,6 +44,52 @@ test('Throws away comments', t => {
 	t.assert(tokens[0].isType(TOKEN_TYPE.EOF));
 });
 
+test('Handles string literals', t => {
+	let source = `"first" "second"`;
+	let scanner = new Scanner(source);
+
+	let tokens = scanner.scanTokens();
+
+	t.assert(tokens[0].isType(TOKEN_TYPE.STRING));
+	t.is(tokens[0].getLiteral(), "first");
+
+	t.assert(tokens[1].isType(TOKEN_TYPE.STRING));
+	t.is(tokens[1].getLiteral(), "second");
+});
+
+test('Handles number literals', t => {
+	let source = `1 2.5`;
+	let scanner = new Scanner(source);
+
+	let tokens = scanner.scanTokens();
+
+	t.assert(tokens[0].isType(TOKEN_TYPE.NUMBER));
+	t.is(tokens[0].getLiteral(), 1);
+
+	t.assert(tokens[1].isType(TOKEN_TYPE.NUMBER));
+	t.is(tokens[1].getLiteral(), 2.5);
+});
+
+test('Handles reserved words', t => {
+	let source = `and`;
+	let scanner = new Scanner(source);
+
+	let tokens = scanner.scanTokens();
+
+	t.assert(tokens[0].isType(TOKEN_TYPE.AND));
+});
+
+test('Follows maximal munch prinicple', t => {
+	let source = `andover`;
+	let scanner = new Scanner(source);
+
+	let tokens = scanner.scanTokens();
+
+	// Should not be AND token type
+	t.assert(tokens[0].isType(TOKEN_TYPE.IDENTIFIER));
+});
+
+
 // test('Reports errors on unhandled character', t => {
 // 	let source = "^";
 // 	let scanner = new Scanner(source);

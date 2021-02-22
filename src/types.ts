@@ -6,6 +6,8 @@ export enum ERROR_CODES {
   EX_USAGE = 64,
 }
 
+export type Literal = string | number | undefined;
+
 export enum TOKEN_TYPE {
   // Single-character tokens.
   LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
@@ -25,4 +27,23 @@ export enum TOKEN_TYPE {
   PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
 
   EOF
+}
+
+export const KEYWORDS: {[key: string]: TOKEN_TYPE} = {
+  "and": TOKEN_TYPE.AND,
+  "class": TOKEN_TYPE.CLASS,
+  "else": TOKEN_TYPE.ELSE,
+  "false": TOKEN_TYPE.FALSE,
+  "fun": TOKEN_TYPE.FUN,
+  "for": TOKEN_TYPE.FOR,
+  "if": TOKEN_TYPE.IF,
+  "nil": TOKEN_TYPE.NIL,
+  "or": TOKEN_TYPE.OR,
+  "print": TOKEN_TYPE.PRINT,
+  "return": TOKEN_TYPE.RETURN,
+  "super": TOKEN_TYPE.SUPER,
+  "this": TOKEN_TYPE.THIS,
+  "true": TOKEN_TYPE.TRUE,
+  "var": TOKEN_TYPE.VAR,
+  "while": TOKEN_TYPE.WHILE
 }

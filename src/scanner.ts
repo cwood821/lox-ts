@@ -1,6 +1,6 @@
 import Token from "./token"
 import { reportError } from "./lox"
-import { TOKEN_TYPE } from "./types";
+import { TOKEN_TYPE, Literal, KEYWORDS } from "./types";
 
 export default class Scanner {
   private source: string;
@@ -29,7 +29,7 @@ export default class Scanner {
     return this.source.charAt(this.current - 1);
   }
 
-  addToken(type: TOKEN_TYPE, literal?: object) {
+  addToken(type: TOKEN_TYPE, literal?: Literal) {
     let text = this.source.substring(this.start,this.current);
     this.tokens.push(new Token(type, text, literal, this.line));
   }
@@ -48,6 +48,79 @@ export default class Scanner {
   peek(): string {
     if (this.isAtEnd()) return '\0';
     return this.source.charAt(this.current);
+  }
+
+  peekNext(): string {
+    if (this.current + 1 >= this.source.length) return '\0';
+
+    return this.source.charAt(this.current + 1);
+  }
+
+  // Handles string literals
+  // Lox only supports double quotations
+  string() {
+    while (this.peek() !== '"' && !this.isAtEnd()) {
+      if (this.peek() == '\n') this.line++;
+      this.advance();
+    }
+
+    if (this.isAtEnd()) {
+      reportError(this.line, "Unterminated String")
+    }
+
+    // Closing "
+    this.advance();
+
+    // Inside the quotes, start of token to end of token
+    let value = this.source.substring(this.start + 1, this.current - 1);
+    this.addToken(TOKEN_TYPE.STRING, value);
+  }
+
+  // This works because
+  isDigit(char: string): boolean {
+    // String comparison works here because of ordering of encoding
+    return char >= '0' && char <= '9';
+  }
+
+  // Handle numbers
+  number() {
+    // Consume everything in integer portion
+    while (this.isDigit(this.peek())) this.advance();
+
+    // Look for a fractional part.
+    if (this.peek() == '.' && this.isDigit(this.peekNext())) {
+      // Consume the "."
+      this.advance();
+      while (this.isDigit(this.peek())) this.advance();
+    }
+
+    this.addToken(
+        TOKEN_TYPE.NUMBER, 
+        // Note: parseFloat is equivalent to 'parseDouble'
+        // because JS only has one type of number 
+        // https://stackoverflow.com/questions/21278234/does-parsedouble-exist-in-javascript
+        parseFloat(this.source.substring(this.start, this.current))
+    );
+  }
+
+  isAlpha(char: string): boolean {
+    return (char >= 'a' && char <= 'z')  ||
+           (char >= 'A' && char <= 'Z') ||
+           char === '_';
+  }
+
+  isAlphaNumeric(char: string): boolean {
+    return this.isAlpha(char) || this.isDigit(char);
+  }
+
+  identifier() {
+    // While the next character is alphanumeric 
+    while (this.isAlphaNumeric(this.peek())) this.advance();
+
+    let text = this.source.substring(this.start, this.current);
+    let type = KEYWORDS[text] ? KEYWORDS[text] : TOKEN_TYPE.IDENTIFIER;
+
+    this.addToken(type);
   }
 
   scanToken() {
@@ -112,8 +185,22 @@ export default class Scanner {
       case '\n':
         this.line++;
         break;
+
+      // Start of a string
+      case '"': 
+        this.string();
+        break;
+
       default:
-        reportError(this.line, "Unexpected Character.");
+        // We handle digits here rather than handling every
+        // decimal digit individually
+        if (this.isDigit(c)) {
+          this.number();
+        } else if (this.isAlpha(c)) {
+          this.identifier();
+        } else {
+          reportError(this.line, "Unexpected Character.");
+        }
         break;
     }
     // 

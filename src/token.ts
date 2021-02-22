@@ -1,13 +1,13 @@
-import { TOKEN_TYPE } from "./types";
+import { Literal, TOKEN_TYPE } from "./types";
 
 export default class Token {
   
   private tokenType: TOKEN_TYPE;
   private lexeme: string;
-  private literal?: object;
+  private literal?: Literal;
   private line: number;
 
-  constructor(type: TOKEN_TYPE, lexeme: string, literal: object | undefined, line: number) {
+  constructor(type: TOKEN_TYPE, lexeme: string, literal: Literal, line: number) {
     this.tokenType = type;
     this.lexeme = lexeme;
     this.literal = literal;
@@ -16,6 +16,10 @@ export default class Token {
 
   isType(type: TOKEN_TYPE) {
     return this.tokenType === type;
+  }
+
+  getLiteral(): Literal {
+    return this.literal;
   }
 
   toString() {
