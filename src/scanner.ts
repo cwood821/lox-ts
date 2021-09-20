@@ -1,6 +1,6 @@
 import Token from "./token"
 import { reportError } from "./lox"
-import { TOKEN_TYPE, Literal, KEYWORDS } from "./types";
+import { TokenType, Literal, KEYWORDS } from "./types";
 
 export default class Scanner {
   private source: string;
@@ -13,14 +13,14 @@ export default class Scanner {
     this.source = source;
   }
 
-  scanTokens() {
+  scanTokens(): Token[] {
 
     while (!this.isAtEnd())  {
       this.start = this.current;
       this.scanToken();
     }
 
-    this.tokens.push(new Token(TOKEN_TYPE.EOF, "", undefined, this.line));
+    this.tokens.push(new Token(TokenType.EOF, "", undefined, this.line));
     return this.tokens;
   }
 
@@ -29,7 +29,7 @@ export default class Scanner {
     return this.source.charAt(this.current - 1);
   }
 
-  addToken(type: TOKEN_TYPE, literal?: Literal) {
+  addToken(type: TokenType, literal?: Literal) {
     let text = this.source.substring(this.start,this.current);
     this.tokens.push(new Token(type, text, literal, this.line));
   }
@@ -73,7 +73,7 @@ export default class Scanner {
 
     // Inside the quotes, start of token to end of token
     let value = this.source.substring(this.start + 1, this.current - 1);
-    this.addToken(TOKEN_TYPE.STRING, value);
+    this.addToken(TokenType.STRING, value);
   }
 
   // This works because
@@ -95,7 +95,7 @@ export default class Scanner {
     }
 
     this.addToken(
-        TOKEN_TYPE.NUMBER, 
+        TokenType.NUMBER, 
         // Note: parseFloat is equivalent to 'parseDouble'
         // because JS only has one type of number 
         // https://stackoverflow.com/questions/21278234/does-parsedouble-exist-in-javascript
@@ -118,7 +118,7 @@ export default class Scanner {
     while (this.isAlphaNumeric(this.peek())) this.advance();
 
     let text = this.source.substring(this.start, this.current);
-    let type = KEYWORDS[text] ? KEYWORDS[text] : TOKEN_TYPE.IDENTIFIER;
+    let type = KEYWORDS[text] ? KEYWORDS[text] : TokenType.IDENTIFIER;
 
     this.addToken(type);
   }
@@ -127,46 +127,46 @@ export default class Scanner {
     let c: string = this.advance();
     switch (c) {
       case '(': 
-        this.addToken(TOKEN_TYPE.LEFT_PAREN); 
+        this.addToken(TokenType.LEFT_PAREN); 
         break;
       case ')': 
-        this.addToken(TOKEN_TYPE.RIGHT_PAREN); 
+        this.addToken(TokenType.RIGHT_PAREN); 
         break;
       case '{': 
-        this.addToken(TOKEN_TYPE.LEFT_BRACE); 
+        this.addToken(TokenType.LEFT_BRACE); 
         break;
       case '}': 
-        this.addToken(TOKEN_TYPE.RIGHT_BRACE); 
+        this.addToken(TokenType.RIGHT_BRACE); 
         break;
       case ',': 
-        this.addToken(TOKEN_TYPE.COMMA); 
+        this.addToken(TokenType.COMMA); 
         break;
       case '.': 
-        this.addToken(TOKEN_TYPE.DOT); 
+        this.addToken(TokenType.DOT); 
         break;
       case '-': 
-        this.addToken(TOKEN_TYPE.MINUS); 
+        this.addToken(TokenType.MINUS); 
         break;
       case '+': 
-        this.addToken(TOKEN_TYPE.PLUS); 
+        this.addToken(TokenType.PLUS); 
         break;
       case ';': 
-        this.addToken(TOKEN_TYPE.SEMICOLON); 
+        this.addToken(TokenType.SEMICOLON); 
         break;
       case '*': 
-        this.addToken(TOKEN_TYPE.STAR); 
+        this.addToken(TokenType.STAR); 
         break; 
       case '!':
-        this.addToken(this.match('=') ? TOKEN_TYPE.BANG_EQUAL : TOKEN_TYPE.BANG);
+        this.addToken(this.match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
         break;
       case '=':
-        this.addToken(this.match('=') ? TOKEN_TYPE.EQUAL_EQUAL : TOKEN_TYPE.EQUAL);
+        this.addToken(this.match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
         break;
       case '<':
-        this.addToken(this.match('=') ? TOKEN_TYPE.LESS_EQUAL : TOKEN_TYPE.LESS);
+        this.addToken(this.match('=') ? TokenType.LESS_EQUAL : TokenType.LESS);
         break;
       case '>':
-        this.addToken(this.match('=') ? TOKEN_TYPE.GREATER_EQUAL : TOKEN_TYPE.GREATER);
+        this.addToken(this.match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER);
         break;
       case '/':
         if (this.match('/')) {
@@ -174,7 +174,7 @@ export default class Scanner {
           // Advance until the end and throw it away
           while (this.peek() !== '\n' && !this.isAtEnd()) this.advance();
         } else {
-          this.addToken(TOKEN_TYPE.SLASH);
+          this.addToken(TokenType.SLASH);
         }
         break;
       case ' ':

@@ -8,42 +8,71 @@ export enum ERROR_CODES {
 
 export type Literal = string | number | undefined;
 
-export enum TOKEN_TYPE {
+export enum TokenType {
   // Single-character tokens.
-  LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
-  COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
+  LEFT_PAREN, 
+  RIGHT_PAREN, 
+  LEFT_BRACE, 
+  RIGHT_BRACE,
+  COMMA, 
+  DOT, 
+  MINUS, 
+  PLUS, 
+  SEMICOLON, 
+  SLASH, 
+  STAR,
 
   // One or two character tokens.
-  BANG, BANG_EQUAL,
-  EQUAL, EQUAL_EQUAL,
-  GREATER, GREATER_EQUAL,
-  LESS, LESS_EQUAL,
+  BANG, 
+  BANG_EQUAL,
+  EQUAL, 
+  EQUAL_EQUAL,
+  GREATER, 
+  GREATER_EQUAL,
+  LESS, 
+  LESS_EQUAL,
 
   // Literals.
-  IDENTIFIER, STRING, NUMBER,
+  IDENTIFIER, 
+  STRING, 
+  NUMBER,
 
   // Keywords.
-  AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
-  PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
+  AND, 
+  CLASS, 
+  ELSE, 
+  FALSE, 
+  FUN, 
+  FOR, 
+  IF, 
+  NIL, 
+  OR,
+  PRINT, 
+  RETURN, 
+  SUPER, 
+  THIS, 
+  TRUE, 
+  VAR, 
+  WHILE,
 
   EOF
 }
 
-export const KEYWORDS: {[key: string]: TOKEN_TYPE} = {
-  "and": TOKEN_TYPE.AND,
-  "class": TOKEN_TYPE.CLASS,
-  "else": TOKEN_TYPE.ELSE,
-  "false": TOKEN_TYPE.FALSE,
-  "fun": TOKEN_TYPE.FUN,
-  "for": TOKEN_TYPE.FOR,
-  "if": TOKEN_TYPE.IF,
-  "nil": TOKEN_TYPE.NIL,
-  "or": TOKEN_TYPE.OR,
-  "print": TOKEN_TYPE.PRINT,
-  "return": TOKEN_TYPE.RETURN,
-  "super": TOKEN_TYPE.SUPER,
-  "this": TOKEN_TYPE.THIS,
-  "true": TOKEN_TYPE.TRUE,
-  "var": TOKEN_TYPE.VAR,
-  "while": TOKEN_TYPE.WHILE
+export const KEYWORDS: { [key: string]: TokenType } = {
+  "and": TokenType.AND,
+  "class": TokenType.CLASS,
+  "else": TokenType.ELSE,
+  "false": TokenType.FALSE,
+  "fun": TokenType.FUN,
+  "for": TokenType.FOR,
+  "if": TokenType.IF,
+  "nil": TokenType.NIL,
+  "or": TokenType.OR,
+  "print": TokenType.PRINT,
+  "return": TokenType.RETURN,
+  "super": TokenType.SUPER,
+  "this": TokenType.THIS,
+  "true": TokenType.TRUE,
+  "var": TokenType.VAR,
+  "while": TokenType.WHILE
 }

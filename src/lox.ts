@@ -2,6 +2,10 @@ import { readFileSync } from "fs";
 import { createInterface, Interface as ReadeLineInterface } from "readline";
 import { ERROR_CODES, REPL_EXIT } from "./types";
 import Scanner from "./scanner";
+import Token from "./token";
+import { TokenType } from "./types";
+import { AstPrinter } from "../tools/printer";
+import Parser from "./parser";
 
 export function lox(args: string[]) {
   if (args.length > 1) {
@@ -18,7 +22,7 @@ function runFile(path: string) {
   const content = readFileSync(path, {
     encoding: "ascii"
   });
-  run(content);
+  Lox.run(content);
 }
 
 async function prompt(rl: ReadeLineInterface): Promise<string> {
@@ -36,23 +40,62 @@ async function runPrompt() {
   while (true) {
     let content = await prompt(rl);
     if (content === REPL_EXIT) break;
-    run(content);
+    Lox.run(content);
   }
 
   rl.close(); 
 }
 
-function run(source: string) {
-  let scanner = new Scanner(source);
-  let tokens = scanner.scanTokens();
+// function run(source: string) {
+//   let scanner = new Scanner(source);
+//   let tokens = scanner.scanTokens();
 
-  // Print the tokens for now
-  tokens.forEach(token => console.log(token));
+//   // Print the tokens for now
+//   tokens.forEach(token => console.log(token));
+// }
+
+
+export class Lox {
+  static hadError = false;
+
+  static run(source: string) {
+    let scanner = new Scanner(source);
+    let tokens = scanner.scanTokens();
+    let parser = new Parser(tokens);
+    let parsed = parser.parse();
+
+    // Syntax error
+    if (Lox.hadError) return;
+
+    console.log("parsed", parsed)
+    // Print the tokens for now
+    // tokens.forEach(token => console.log(token));
+    let printer = new AstPrinter();
+    let result = printer.print(parsed);
+    console.log('result', result);
+  }
+
+  static error(token, message) {
+    Lox.hadError = true;
+    if (token.type == TokenType.EOF) {
+      report(token.getLine(), " at end", message);
+    } else {
+      report(token.getLine(), " at '" + token.getLexeme() + "'", message);
+    } 
+  }
 }
 
 
 export function reportError(lineNum: number, message: string) {
   report(lineNum, "", message);
+}
+
+export function parserError(token: Token, message: string) {
+  if (token.getType() == TokenType.EOF) {
+    report(token.getLine(), " at end", message);
+  } else {
+    report(token.getLine(), " at '" + token.getLexeme() + "'", message);
+  }
 }
 
 function report(lineNum: number, where: string, message: string) {

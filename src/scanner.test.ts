@@ -1,6 +1,6 @@
 import test from "ava";
 import Scanner from "./scanner"
-import { TOKEN_TYPE } from "./types";
+import { TokenType } from "./types";
 
 test('Handles single char', t => {
 	let source = ".";
@@ -8,7 +8,7 @@ test('Handles single char', t => {
 
 	let tokens = scanner.scanTokens();
 
-	t.assert(tokens[0].isType(TOKEN_TYPE.DOT));
+	t.assert(tokens[0].isType(TokenType.DOT));
 });
 
 test('Handles multiple chars', t => {
@@ -17,8 +17,8 @@ test('Handles multiple chars', t => {
 
 	let tokens = scanner.scanTokens();
 
-	t.assert(tokens[0].isType(TOKEN_TYPE.LEFT_PAREN));
-	t.assert(tokens[1].isType(TOKEN_TYPE.RIGHT_PAREN));
+	t.assert(tokens[0].isType(TokenType.LEFT_PAREN));
+	t.assert(tokens[1].isType(TokenType.RIGHT_PAREN));
 });
 
 test('Handles two-char lexeme', t => {
@@ -30,7 +30,7 @@ test('Handles two-char lexeme', t => {
 	// Only one token should be produced from the two characters
 	// and then we always have an EOF token at the end
 	t.is(tokens.length, 2);
-	t.assert(tokens[0].isType(TOKEN_TYPE.BANG_EQUAL));
+	t.assert(tokens[0].isType(TokenType.BANG_EQUAL));
 });
 
 test('Throws away comments', t => {
@@ -41,7 +41,7 @@ test('Throws away comments', t => {
 
 	// There should only be the EOF
 	t.is(tokens.length, 1);
-	t.assert(tokens[0].isType(TOKEN_TYPE.EOF));
+	t.assert(tokens[0].isType(TokenType.EOF));
 });
 
 test('Handles string literals', t => {
@@ -50,10 +50,10 @@ test('Handles string literals', t => {
 
 	let tokens = scanner.scanTokens();
 
-	t.assert(tokens[0].isType(TOKEN_TYPE.STRING));
+	t.assert(tokens[0].isType(TokenType.STRING));
 	t.is(tokens[0].getLiteral(), "first");
 
-	t.assert(tokens[1].isType(TOKEN_TYPE.STRING));
+	t.assert(tokens[1].isType(TokenType.STRING));
 	t.is(tokens[1].getLiteral(), "second");
 });
 
@@ -63,10 +63,10 @@ test('Handles number literals', t => {
 
 	let tokens = scanner.scanTokens();
 
-	t.assert(tokens[0].isType(TOKEN_TYPE.NUMBER));
+	t.assert(tokens[0].isType(TokenType.NUMBER));
 	t.is(tokens[0].getLiteral(), 1);
 
-	t.assert(tokens[1].isType(TOKEN_TYPE.NUMBER));
+	t.assert(tokens[1].isType(TokenType.NUMBER));
 	t.is(tokens[1].getLiteral(), 2.5);
 });
 
@@ -76,7 +76,7 @@ test('Handles reserved words', t => {
 
 	let tokens = scanner.scanTokens();
 
-	t.assert(tokens[0].isType(TOKEN_TYPE.AND));
+	t.assert(tokens[0].isType(TokenType.AND));
 });
 
 test('Follows maximal munch prinicple', t => {
@@ -86,7 +86,7 @@ test('Follows maximal munch prinicple', t => {
 	let tokens = scanner.scanTokens();
 
 	// Should not be AND token type
-	t.assert(tokens[0].isType(TOKEN_TYPE.IDENTIFIER));
+	t.assert(tokens[0].isType(TokenType.IDENTIFIER));
 });
 
 
