@@ -6,6 +6,8 @@ import Token from "./token";
 import { TokenType } from "./types";
 import { AstPrinter } from "../tools/printer";
 import Parser from "./parser";
+import { exit } from "process";
+import Interpreter from "./interpreter";
 
 export function lox(args: string[]) {
   if (args.length > 1) {
@@ -23,6 +25,9 @@ function runFile(path: string) {
     encoding: "ascii"
   });
   Lox.run(content);
+
+  if (Lox.hadError) exit(65);
+  if (Lox.hadRuntimeError) exit(70);
 }
 
 async function prompt(rl: ReadeLineInterface): Promise<string> {
@@ -57,22 +62,31 @@ async function runPrompt() {
 
 export class Lox {
   static hadError = false;
+  static hadRuntimeError = false;
 
   static run(source: string) {
     let scanner = new Scanner(source);
     let tokens = scanner.scanTokens();
     let parser = new Parser(tokens);
     let parsed = parser.parse();
+    let intepreter = new Interpreter();
 
     // Syntax error
     if (Lox.hadError) return;
 
-    console.log("parsed", parsed)
     // Print the tokens for now
     // tokens.forEach(token => console.log(token));
-    let printer = new AstPrinter();
-    let result = printer.print(parsed);
-    console.log('result', result);
+    // let printer = new AstPrinter();
+    // let result = printer.print(parsed);
+    // console.log('result', result);
+
+    // @ts-ignore - null
+    console.log(intepreter.interpret(parsed));
+  }
+
+  static runtimeError(error) {
+    this.hadRuntimeError = true;
+    console.error(`${error.message} [line ${error.token.line}]`);
   }
 
   static error(token, message) {

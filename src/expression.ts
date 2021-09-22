@@ -27,10 +27,10 @@ accept(visitor: Visitor<Binary>) {
 }
 
 export class Grouping extends Expression {
-  Expressionession: Expression;
-  constructor(Expressionession: Expression) {
+  expression: Expression;
+  constructor(expression: Expression) {
 		super();
-    this.Expressionession = Expressionession;
+    this.expression = expression;
   } 
 
 accept(visitor: Visitor<Grouping>) {
