@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFileSync, stat } from "fs";
 import { createInterface, Interface as ReadeLineInterface } from "readline";
 import { ERROR_CODES, REPL_EXIT } from "./types";
 import Scanner from "./scanner";
@@ -51,14 +51,6 @@ async function runPrompt() {
   rl.close(); 
 }
 
-// function run(source: string) {
-//   let scanner = new Scanner(source);
-//   let tokens = scanner.scanTokens();
-
-//   // Print the tokens for now
-//   tokens.forEach(token => console.log(token));
-// }
-
 
 export class Lox {
   static hadError = false;
@@ -68,7 +60,7 @@ export class Lox {
     let scanner = new Scanner(source);
     let tokens = scanner.scanTokens();
     let parser = new Parser(tokens);
-    let parsed = parser.parse();
+    let statements  = parser.parse();
     let intepreter = new Interpreter();
 
     // Syntax error
@@ -81,7 +73,7 @@ export class Lox {
     // console.log('result', result);
 
     // @ts-ignore - null
-    console.log(intepreter.interpret(parsed));
+    console.log(intepreter.interpret(statements));
   }
 
   static runtimeError(error) {

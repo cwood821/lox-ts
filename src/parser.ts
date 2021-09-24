@@ -1,6 +1,7 @@
 import { type } from "os";
 import { checkServerIdentity } from "tls";
-import { Expression, Binary, Unary, Literal, Grouping } from "./expression";
+import { Expr, Binary, Unary, Literal, Grouping } from "./expr";
+import { Stmt, Print, Expression } from "./stmt";
 import Token from "./token";
 import { TokenType } from "./types";
 import { Lox, parserError } from "./lox"
@@ -15,12 +16,13 @@ export default class Parser {
 		this.tokens = tokens;
 	}
 
-	parse(): Expression | null {
-		try {
-			return this.expression();
-		} catch(e) {
-			return null;
+	parse(): Stmt[] {
+		let statements = [];
+		while(!this.isAtEnd()) {
+			// @ts-ignore - 
+			statements.push(this.statement())
 		}
+		return statements;
 	}
 
 	previous() {
@@ -55,6 +57,24 @@ export default class Parser {
 		}
 
 		return false;
+	}
+
+	statement() {
+    if (this.match(TokenType.PRINT)) return this.printStatement();
+
+    return this.expressionStatement();
+  }
+
+	printStatement() {
+		let value = this.expression();
+		this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
+		return new Print(value);
+	}
+
+	expressionStatement() {
+		let expr = this.expression();
+    this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
+    return new Expression(expr);
 	}
 
 	comparison() {

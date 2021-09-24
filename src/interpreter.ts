@@ -1,25 +1,30 @@
 import RuntimeError from "./errors/runtime";
-import { Literal, Grouping, Unary, Binary, Expression } from "./expression";
+import { Literal, Grouping, Unary, Binary, Expr, Visitor as ExpresionVisitor } from "./expr";
+import { Stmt, Expression, Print, Visitor as StatementVisitor } from "./stmt";
 import { TokenType } from "./types";
 import { Lox } from "./lox";
 
 
 
-export default class Interpreter {
+export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 
-	constructor() {
+	constructor() {}
 
-	}
+	interpret(statements: Stmt[]) { 
 
-	interpret(expression: Expression) { 
-    try {
-      let value = this.evaluate(expression);
-			return value;
+		try {
+			statements.forEach(statement => {
+        this.execute(statement);
+			})
     } catch (error) {
-			console.error(error)
       Lox.runtimeError(error);
     }
+
   }
+
+	execute(statement: Stmt) {
+		statement.accept(this);
+	}
 
 	stringify(object) {
 			if (object == null) return "nil";
@@ -68,6 +73,17 @@ export default class Interpreter {
 		}
 
 		throw new RuntimeError(operator, "Operands must be a number");
+	}
+
+	visitExpression(expr: Expression) {
+		this.evaluate(expr);
+		return null;
+	}
+
+	visitPrint(stmt: Print) {
+		let value = this.evaluate(stmt.expression);
+		console.log(this.stringify(value));
+		return null;
 	}
 
 	visitLiteral(expr: Literal) {
