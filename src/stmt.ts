@@ -10,6 +10,7 @@ visitBlock(block: Block)
 visitIf(ifStmt: If) 
 visitPrint(print: Print) 
 visitVar(varStmt: Var) 
+visitWhile(whileStmt: While) 
 
 }
 	
@@ -81,6 +82,21 @@ export class Var extends Stmt {
 accept(visitor: Visitor) {
 
 			return visitor.visitVar(this);
+		}
+}
+
+export class While extends Stmt {
+  condition: Expr;
+  body: Stmt;
+  constructor(condition: Expr, body: Stmt) {
+		super();
+    this.condition = condition;
+    this.body = body;
+  } 
+
+accept(visitor: Visitor) {
+
+			return visitor.visitWhile(this);
 		}
 }
 

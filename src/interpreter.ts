@@ -14,7 +14,6 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 	constructor() {}
 
 	interpret(statements: Stmt[]) { 
-
 		try {
 			statements.forEach(statement => {
         this.execute(statement);
@@ -92,8 +91,8 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 		throw new RuntimeError(operator, "Operands must be a number");
 	}
 
-	visitExpression(expr: Expression) {
-		this.evaluate(expr);
+	visitExpression(stmt: Expression) {
+		this.evaluate(stmt.expression);
 		return null;
 	}
 
@@ -213,5 +212,12 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
     }
 
     return this.evaluate(expr.right);
+	}
+
+	visitWhile(stmt) {
+		while (this.isTruthy(this.evaluate(stmt.condition))) {
+			this.execute(stmt.body);
+		}
+		return null;
 	}
 }

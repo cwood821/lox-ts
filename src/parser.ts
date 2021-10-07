@@ -1,7 +1,7 @@
 import { type } from "os";
 import { checkServerIdentity } from "tls";
 import { Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical } from "./expr";
-import { Stmt, Var, Print, Expression, Block, If } from "./stmt";
+import { Stmt, Var, Print, Expression, Block, If, While } from "./stmt";
 import Token from "./token";
 import { TokenType } from "./types";
 import { Lox, parserError } from "./lox"
@@ -92,6 +92,7 @@ export default class Parser {
 	statement() {
 		if (this.match(TokenType.IF)) return this.ifStatement();
 		if (this.match(TokenType.PRINT)) return this.printStatement();
+		if (this.match(TokenType.WHILE)) return this.whileStatement();
 		if (this.match(TokenType.LEFT_BRACE)) return new Block(this.block());
 
 		return this.expressionStatement();
@@ -107,6 +108,15 @@ export default class Parser {
 
     this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
     return statements;
+	}
+
+	whileStatement() {
+		this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+    let condition = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+    let body = this.statement();
+
+    return new While(condition, body);
 	}
 
 	ifStatement() {
