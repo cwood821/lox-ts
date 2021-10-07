@@ -1,12 +1,15 @@
 import RuntimeError from "./errors/runtime";
-import { Literal, Grouping, Unary, Binary, Expr, Visitor as ExpresionVisitor } from "./expr";
-import { Stmt, Expression, Print, Visitor as StatementVisitor } from "./stmt";
+import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical } from "./expr";
+import { Stmt, Expression, Print, Visitor as StatementVisitor, Var, Block, If } from "./stmt";
 import { TokenType } from "./types";
 import { Lox } from "./lox";
+import Environment from "./environment";
 
 
 
 export default class Interpreter implements StatementVisitor, ExpresionVisitor {
+
+	environment: Environment = new Environment();
 
 	constructor() {}
 
@@ -24,6 +27,19 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 
 	execute(statement: Stmt) {
 		statement.accept(this);
+	}
+
+	executeBlock(statements: Stmt[], environment: Environment) {
+			let previous = this.environment;
+			try {
+				this.environment = environment;
+	
+				statements.forEach(statement => {
+					this.execute(statement);
+				})
+			} finally {
+				this.environment = previous;
+			}
 	}
 
 	stringify(object) {
@@ -48,6 +64,7 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 	isTruthy(obj) {
 		if (obj === null) return false;
 		if (typeof obj === "boolean") return obj; 
+		if (typeof obj === "string" && obj.length > 0) return true;
 		return false;
 	}
 
@@ -150,5 +167,51 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 		}
 
 		return null;
+	}
+
+	visitVariable(expr: Variable) {
+		return this.environment.get(expr.name);
+	}
+
+	visitVar(stmt: Var) {
+		let value = null;
+    if (stmt.initializer != null) {
+      value = this.evaluate(stmt.initializer);
+    }
+
+    this.environment.define(stmt.name.getLexeme(), value);
+    return null;
+	}
+
+	visitAssign(expr: Assign) {
+		let value = this.evaluate(expr.value);
+		this.environment.assign(expr.name, value);
+		return value;
+	}
+
+	visitBlock(stmt: Block) {
+		this.executeBlock(stmt.statements, new Environment(this.environment));
+	}
+
+	 visitIf(stmt: If) {
+    if (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.thenBranch);
+    } else if (stmt.elseBranch != null) {
+      this.execute(stmt.elseBranch);
+    }
+    return null;
+  }
+
+	visitLogical(expr: Logical) {
+		let left = this.evaluate(expr.left);
+
+		// Short circuiting
+    if (expr.operator.getType() == TokenType.OR) {
+      if (this.isTruthy(left)) return left;
+    } else {
+      if (!this.isTruthy(left)) return left;
+    }
+
+    return this.evaluate(expr.right);
 	}
 }

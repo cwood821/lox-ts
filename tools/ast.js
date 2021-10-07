@@ -2,15 +2,21 @@ let { writeFileSync, readFileSync } = require("fs");
 const { basename } = require("path");
 
 const types = {
+	"Assign": "name: Token, value: Expr",
 	"Binary": "left: Expr, operator: Token, right: Expr",
 	"Grouping": "expression: Expr",
 	"Literal": "value: Object",
-	"Unary": "operator: Token, right: Expr"
+	"Logical": "left: Expr, operator: Token, right: Expr",
+	"Unary": "operator: Token, right: Expr",
+	"Variable": "name: Token"
 }
 
 const statements = {
 	"Expression": "expression: Expr",
-	"Print": "expression: Expr"
+	"Block": "statements: Stmt[]",
+	"If": "condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null",
+	"Print": "expression: Expr",
+	"Var": "name: Token, initializer: Expr"
 };
 
 function writeClasses(path, name, types, imports = "") {
@@ -24,11 +30,15 @@ export abstract class ${name} {
 
 	// visitor interface
 	let visitor = `export interface Visitor {\n`
-	for (type of Object.keys(types)) {
+	for (let type of Object.keys(types)) {
 		let field = types[type];
 		let [name, typeName] = field.split(":");
 		// let titleCase = typeName.charAt(0).toUpperCase() + typeName.slice(1);
-		visitor += `visit${type}(${type.toLowerCase()}: ${type}) \n`
+		let param = type.toLowerCase();
+		if (param === "if" || param === "var") {
+			param += "Stmt"
+		}
+		visitor += `visit${type}(${param}: ${type}) \n`;
 	}
 
 	visitor += `\n}`
@@ -122,4 +132,4 @@ const cwd = process.cwd();
 
 writeClasses(cwd, "Expr", types, `import Token from "./token";`);
 
-writeClasses(cwd, "Stmt", statements, 'import { Expr } from "./expr";');
+writeClasses(cwd, "Stmt", statements, 'import { Expr } from "./expr"; import Token from "./token";');

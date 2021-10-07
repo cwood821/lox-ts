@@ -58,3 +58,19 @@ test('Boolean - true is true', t => {
 	// @ts-ignore - Null will fail test
 	t.assert(result === false);
 });
+
+test('String - empty string is false', t => {
+	let interpreter = new Interpreter();
+	// @ts-ignore
+	let result = interpreter.isTruthy("");
+	// @ts-ignore - Null will fail test
+	t.assert(result === false);
+});
+
+test('String - non-empty string is true', t => {
+	let interpreter = new Interpreter();
+	// @ts-ignore
+	let result = interpreter.isTruthy("hello");
+	// @ts-ignore - Null will fail test
+	t.assert(result === true);
+});
