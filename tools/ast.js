@@ -4,6 +4,7 @@ const { basename } = require("path");
 const types = {
 	"Assign": "name: Token, value: Expr",
 	"Binary": "left: Expr, operator: Token, right: Expr",
+	"Call": "callee: Expr, paren: Token, args: Expr[]",
 	"Grouping": "expression: Expr",
 	"Literal": "value: Object",
 	"Logical": "left: Expr, operator: Token, right: Expr",
@@ -14,9 +15,11 @@ const types = {
 const statements = {
 	"Expression": "expression: Expr",
 	"Block": "statements: Stmt[]",
+	"Func": "name: Token, params: Token[], body: Stmt[]",
 	"If": "condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null",
 	"Print": "expression: Expr",
-	"Var": "name: Token, initializer: Expr"
+	"Var": "name: Token, initializer: Expr",
+	"While": "condition: Expr, body: Stmt"
 };
 
 function writeClasses(path, name, types, imports = "") {
@@ -35,7 +38,7 @@ export abstract class ${name} {
 		let [name, typeName] = field.split(":");
 		// let titleCase = typeName.charAt(0).toUpperCase() + typeName.slice(1);
 		let param = type.toLowerCase();
-		if (param === "if" || param === "var") {
+		if (param === "if" || param === "var" || param === "while") {
 			param += "Stmt"
 		}
 		visitor += `visit${type}(${param}: ${type}) \n`;

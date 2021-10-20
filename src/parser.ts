@@ -1,7 +1,7 @@
 import { type } from "os";
 import { checkServerIdentity } from "tls";
-import { Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical } from "./expr";
-import { Stmt, Var, Print, Expression, Block, If, While } from "./stmt";
+import { Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call } from "./expr";
+import { Stmt, Var, Print, Expression, Block, If, While, Func } from "./stmt";
 import Token from "./token";
 import { TokenType } from "./types";
 import { Lox, parserError } from "./lox"
@@ -73,10 +73,33 @@ export default class Parser {
 		return new Var(name, initializer);
 	}
 
+ funDeclaration(kind: string) {
+	 let name = this.consume(TokenType.IDENTIFIER, `Expect ${kind} name`)
 
+	 this.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
+	 let parameters: Token[] = [];
+	 if (!this.check(TokenType.RIGHT_PAREN)) {
+		 do {
+			 if (parameters.length > 255) {
+				 this.error(this.peek(), "Can't have more than 255 parameters.");
+			 }
+
+			 // @ts-ignore - error throws on consume failure
+			 parameters.push(this.consume(TokenType.IDENTIFIER, "Expect parameter name."));
+		 } while (this.match(TokenType.COMMA));
+	 }
+
+	 this.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+
+	 this.consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
+	 let body: Stmt[] = this.block();
+	 // @ts-ignore - would have failed before if name was undefined
+	 return new Func(name, parameters, body);
+ }
 
 	declaration() {
 		try {
+			if (this.match(TokenType.FUN)) { return this.funDeclaration("function") }
 			if (this.match(TokenType.VAR)) {
 				return this.varDeclaration();
 			}
@@ -90,6 +113,7 @@ export default class Parser {
 	}
 
 	statement() {
+		if (this.match(TokenType.FOR)) return this.forStatement();
 		if (this.match(TokenType.IF)) return this.ifStatement();
 		if (this.match(TokenType.PRINT)) return this.printStatement();
 		if (this.match(TokenType.WHILE)) return this.whileStatement();
@@ -101,22 +125,62 @@ export default class Parser {
 	block() {
 		let statements: Stmt[] = [];
 
-    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+		while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
 			// @ts-ignore - TODO: Fix this typing issue
-      statements.push(this.declaration());
-    }
+			statements.push(this.declaration());
+		}
 
-    this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
-    return statements;
+		this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+		return statements;
+	}
+
+	forStatement() {
+		this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+		let initializer;
+
+		if (this.match(TokenType.SEMICOLON)) {
+			initializer = null;
+		} else if (this.match(TokenType.VAR)) {
+			initializer = this.varDeclaration();
+		} else {
+			initializer = this.expressionStatement();
+		}
+
+		let condition: null | Expr = null;
+		if (!this.check(TokenType.SEMICOLON)) {
+			condition = this.expression();
+		}
+
+		this.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
+
+		let increment = null;
+		if (!this.check(TokenType.RIGHT_PAREN)) {
+			increment = this.expression();
+		}
+		this.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
+
+		let body = this.statement();
+		if (increment != null) {
+			body = new Block([body, new Expression(increment)]);
+		}
+
+		if (condition == null) condition = new Literal(true);
+		body = new While(condition, body);
+
+		if (initializer != null) {
+			body = new Block([initializer, body]);
+		}
+
+		return body;
 	}
 
 	whileStatement() {
 		this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
-    let condition = this.expression();
-    this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
-    let body = this.statement();
+		let condition = this.expression();
+		this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+		let body = this.statement();
 
-    return new While(condition, body);
+		return new While(condition, body);
 	}
 
 	ifStatement() {
@@ -189,7 +253,39 @@ export default class Parser {
 			return new Unary(operator, right);
 		}
 
-		return this.primary();
+		return this.call();
+	}
+
+	call() {
+		let expr = this.primary();
+
+		while (true) {
+			if (this.match(TokenType.LEFT_PAREN)) {
+				expr = this.finishCall(expr);
+			} else {
+				break;
+			}
+		}
+
+		return expr;
+	}
+
+	finishCall(callee: Expr) {
+		let args = [];
+		if (!this.check(TokenType.RIGHT_PAREN)) {
+			do {
+				// @ts-ignore - 
+				args.push(this.expression());
+				if (args.length >= 255) {
+					this.error(this.peek(), "Can't have more than 255 arguments.");
+				}
+			} while (this.match(TokenType.COMMA));
+		}
+
+		let paren = this.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+
+		// @ts-ignore, will throw error when paren is undefined
+		return new Call(callee, paren, args);
 	}
 
 	primary() {
@@ -256,25 +352,25 @@ export default class Parser {
 	or() {
 		let expr = this.and();
 
-    while (this.match(TokenType.OR)) {
-      let operator = this.previous();
-      let right = this.and();
-      expr = new Logical(expr, operator, right);
-    }
+		while (this.match(TokenType.OR)) {
+			let operator = this.previous();
+			let right = this.and();
+			expr = new Logical(expr, operator, right);
+		}
 
-    return expr;
+		return expr;
 	}
 
 	and() {
 		let expr = this.equality();
 
-    while (this.match(TokenType.AND)) {
-      let operator = this.previous();
-      let right = this.equality();
-      expr = new Logical(expr, operator, right);
-    }
+		while (this.match(TokenType.AND)) {
+			let operator = this.previous();
+			let right = this.equality();
+			expr = new Logical(expr, operator, right);
+		}
 
-    return expr;
+		return expr;
 	}
 
 	equality() {

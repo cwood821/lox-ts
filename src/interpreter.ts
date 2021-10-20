@@ -1,6 +1,8 @@
 import RuntimeError from "./errors/runtime";
-import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical } from "./expr";
-import { Stmt, Expression, Print, Visitor as StatementVisitor, Var, Block, If } from "./stmt";
+import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical, Call } from "./expr";
+import { Stmt, Expression, Print, Visitor as StatementVisitor, Var, Block, If, Func } from "./stmt";
+import { LoxCallable, Clock, isCallable } from "./callable";
+import { LoxFunction } from "./function";
 import { TokenType } from "./types";
 import { Lox } from "./lox";
 import Environment from "./environment";
@@ -9,9 +11,14 @@ import Environment from "./environment";
 
 export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 
-	environment: Environment = new Environment();
 
-	constructor() {}
+	globals: Environment = new Environment();
+	environment: Environment = this.globals;
+
+	constructor() {
+		this.globals.define("clock", new Clock());
+
+	}
 
 	interpret(statements: Stmt[]) { 
 		try {
@@ -220,4 +227,36 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 		}
 		return null;
 	}
+
+	visitCall(expr: Call) {
+    let callee = this.evaluate(expr.callee);
+
+    let args = [];
+		expr.arguments.forEach((arg) => { 
+			// @ts-ignore
+			args.push(this.evaluate(arg));
+		});
+
+		if (!isCallable(callee)) {
+      throw new RuntimeError(expr.paren,
+          "Can only call functions and classes.");
+    }
+
+    let fun: LoxCallable = callee;
+
+		if (args.length != fun.arity()) {
+      throw new RuntimeError(expr.paren, "Expected " +
+          fun.arity() + " arguments but got " +
+          args.length + ".");
+    }
+
+    return fun.call(this, args);
+  }
+
+	visitFunc(stmt: Func) {
+    let func = new LoxFunction(stmt);
+    this.environment.define(stmt.name.getLexeme(), func);
+    return null;
+  }
+
 }

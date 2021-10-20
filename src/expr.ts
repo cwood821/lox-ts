@@ -1,32 +1,34 @@
 import Token from "./token";
 
 export abstract class Expr {
-  abstract accept(visitor: Visitor)
+	abstract accept(visitor: Visitor)
 }
 
-export interface Visitor {
-  visitAssign(assign: Assign)
-  visitBinary(binary: Binary)
-  visitGrouping(grouping: Grouping)
-  visitLiteral(literal: Literal)
-  visitLogical(logical: Logical)
-  visitUnary(unary: Unary)
-  visitVariable(variable: Variable)
+	export interface Visitor {
+visitAssign(assign: Assign) 
+visitBinary(binary: Binary) 
+visitCall(call: Call) 
+visitGrouping(grouping: Grouping) 
+visitLiteral(literal: Literal) 
+visitLogical(logical: Logical) 
+visitUnary(unary: Unary) 
+visitVariable(variable: Variable) 
 
 }
-
+	
 export class Assign extends Expr {
   name: Token;
   value: Expr;
   constructor(name: Token, value: Expr) {
-    super();
+		super();
     this.name = name;
     this.value = value;
-  }
+  } 
 
-  accept(visitor: Visitor) {
-    return visitor.visitAssign(this);
-  }
+accept(visitor: Visitor) {
+
+			return visitor.visitAssign(this);
+		}
 }
 
 export class Binary extends Expr {
@@ -34,40 +36,59 @@ export class Binary extends Expr {
   operator: Token;
   right: Expr;
   constructor(left: Expr, operator: Token, right: Expr) {
-    super();
+		super();
     this.left = left;
     this.operator = operator;
     this.right = right;
-  }
+  } 
 
-  accept(visitor: Visitor) {
-    return visitor.visitBinary(this);
-  }
+accept(visitor: Visitor) {
+
+			return visitor.visitBinary(this);
+		}
+}
+
+export class Call extends Expr {
+  callee: Expr;
+  paren: Token;
+  arguments: Expr[];
+  constructor(callee: Expr, paren: Token, args: Expr[]) {
+		super();
+    this.callee = callee;
+    this.paren = paren;
+    this.arguments = args;
+  } 
+
+accept(visitor: Visitor) {
+
+			return visitor.visitCall(this);
+		}
 }
 
 export class Grouping extends Expr {
   expression: Expr;
   constructor(expression: Expr) {
-    super();
+		super();
     this.expression = expression;
-  }
+  } 
 
-  accept(visitor: Visitor) {
+accept(visitor: Visitor) {
 
-    return visitor.visitGrouping(this);
-  }
+			return visitor.visitGrouping(this);
+		}
 }
 
 export class Literal extends Expr {
   value: Object;
   constructor(value: Object) {
-    super();
+		super();
     this.value = value;
-  }
+  } 
 
-  accept(visitor: Visitor) {
-    return visitor.visitLiteral(this);
-  }
+accept(visitor: Visitor) {
+
+			return visitor.visitLiteral(this);
+		}
 }
 
 export class Logical extends Expr {
@@ -75,42 +96,43 @@ export class Logical extends Expr {
   operator: Token;
   right: Expr;
   constructor(left: Expr, operator: Token, right: Expr) {
-    super();
+		super();
     this.left = left;
     this.operator = operator;
     this.right = right;
-  }
+  } 
 
-  accept(visitor: Visitor) {
+accept(visitor: Visitor) {
 
-    return visitor.visitLogical(this);
-  }
+			return visitor.visitLogical(this);
+		}
 }
 
 export class Unary extends Expr {
   operator: Token;
   right: Expr;
   constructor(operator: Token, right: Expr) {
-    super();
+		super();
     this.operator = operator;
     this.right = right;
-  }
+  } 
 
-  accept(visitor: Visitor) {
+accept(visitor: Visitor) {
 
-    return visitor.visitUnary(this);
-  }
+			return visitor.visitUnary(this);
+		}
 }
 
 export class Variable extends Expr {
   name: Token;
   constructor(name: Token) {
-    super();
+		super();
     this.name = name;
-  }
+  } 
 
-  accept(visitor: Visitor) {
-    return visitor.visitVariable(this);
-  }
+accept(visitor: Visitor) {
+
+			return visitor.visitVariable(this);
+		}
 }
 
