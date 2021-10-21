@@ -51,12 +51,12 @@ accept(visitor: Visitor) {
 export class Call extends Expr {
   callee: Expr;
   paren: Token;
-  arguments: Expr[];
+  args: Expr[];
   constructor(callee: Expr, paren: Token, args: Expr[]) {
 		super();
     this.callee = callee;
     this.paren = paren;
-    this.arguments = args;
+    this.args = args;
   } 
 
 accept(visitor: Visitor) {

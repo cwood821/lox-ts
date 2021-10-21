@@ -1,7 +1,7 @@
 import { type } from "os";
 import { checkServerIdentity } from "tls";
 import { Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call } from "./expr";
-import { Stmt, Var, Print, Expression, Block, If, While, Func } from "./stmt";
+import { Stmt, Var, Print, Expression, Block, If, While, Func, Ret } from "./stmt";
 import Token from "./token";
 import { TokenType } from "./types";
 import { Lox, parserError } from "./lox"
@@ -116,6 +116,7 @@ export default class Parser {
 		if (this.match(TokenType.FOR)) return this.forStatement();
 		if (this.match(TokenType.IF)) return this.ifStatement();
 		if (this.match(TokenType.PRINT)) return this.printStatement();
+		if (this.match(TokenType.RETURN)) return this.returnStatement();
 		if (this.match(TokenType.WHILE)) return this.whileStatement();
 		if (this.match(TokenType.LEFT_BRACE)) return new Block(this.block());
 
@@ -202,6 +203,19 @@ export default class Parser {
 		let value = this.expression();
 		this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
 		return new Print(value);
+	}
+
+	returnStatement() {
+    let keyword = this.previous();
+    let value = null;
+
+		// Rather than checking for presence of value, we check for absence
+    if (!this.check(TokenType.SEMICOLON)) {
+      value = this.expression();
+    }
+
+    this.consume(TokenType.SEMICOLON, "Expect ';' after return value.");
+    return new Ret(keyword, value);
 	}
 
 	expressionStatement() {

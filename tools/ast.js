@@ -18,6 +18,7 @@ const statements = {
 	"Func": "name: Token, params: Token[], body: Stmt[]",
 	"If": "condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null",
 	"Print": "expression: Expr",
+	"Ret": "keyword: Token, value: Expr",
 	"Var": "name: Token, initializer: Expr",
 	"While": "condition: Expr, body: Stmt"
 };

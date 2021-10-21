@@ -1,8 +1,9 @@
 import RuntimeError from "./errors/runtime";
 import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical, Call } from "./expr";
-import { Stmt, Expression, Print, Visitor as StatementVisitor, Var, Block, If, Func } from "./stmt";
+import { Stmt, Expression, Print, Visitor as StatementVisitor, Var, Block, If, Func, Ret } from "./stmt";
 import { LoxCallable, Clock, isCallable } from "./callable";
 import { LoxFunction } from "./function";
+import ReturnException from "./return";
 import { TokenType } from "./types";
 import { Lox } from "./lox";
 import Environment from "./environment";
@@ -232,7 +233,7 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
     let callee = this.evaluate(expr.callee);
 
     let args = [];
-		expr.arguments.forEach((arg) => { 
+		expr.args.forEach((arg) => { 
 			// @ts-ignore
 			args.push(this.evaluate(arg));
 		});
@@ -254,9 +255,17 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
   }
 
 	visitFunc(stmt: Func) {
-    let func = new LoxFunction(stmt);
+		// We pass the current environment at time of definition, which is a closure 
+    let func = new LoxFunction(stmt, this.environment);
     this.environment.define(stmt.name.getLexeme(), func);
     return null;
   }
+
+	visitRet(stmt) {
+		let value = null;
+		if (stmt.value != null) value = this.evaluate(stmt.value);
+
+		throw new ReturnException(value);
+	}
 
 }

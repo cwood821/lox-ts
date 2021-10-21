@@ -5,17 +5,26 @@ import { Func } from "./stmt";
 
 export class LoxFunction implements LoxCallable {
   private declaration: Func;
-  constructor(declaration: Func) {
+	private closure: Environment;
+
+  constructor(declaration: Func, closure: Environment) {
     this.declaration = declaration;
+		this.closure = closure;
   }
 
   call(interpreter: Interpreter, args: any[]) {
-    let environment = new Environment(interpreter.globals);
+    let environment = new Environment(this.closure);
     for (let i = 0; i < this.declaration.params.length; i++) {
       environment.define(this.declaration.params[i].getLexeme(), args[i]);
     }
 
-    interpreter.executeBlock(this.declaration.body, environment);
+		// We use an exception to jump out of deeploy nested functions with a return
+		try {
+			interpreter.executeBlock(this.declaration.body, environment);
+		} catch (returnValue) {
+			return returnValue?.value; 
+		}
+
     return null;
   }
 

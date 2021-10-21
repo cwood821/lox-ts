@@ -10,6 +10,7 @@ visitBlock(block: Block)
 visitFunc(func: Func) 
 visitIf(ifStmt: If) 
 visitPrint(print: Print) 
+visitRet(ret: Ret) 
 visitVar(varStmt: Var) 
 visitWhile(whileStmt: While) 
 
@@ -85,6 +86,20 @@ export class Print extends Stmt {
 accept(visitor: Visitor) {
 
 			return visitor.visitPrint(this);
+		}
+}
+
+export class Ret extends Stmt {
+  keyword: Token;
+  value: Expr | null;
+  constructor(keyword: Token, value: Expr | null) {
+		super();
+    this.keyword = keyword;
+    this.value = value;
+  } 
+
+accept(visitor: Visitor) {
+			return visitor.visitRet(this);
 		}
 }
 
