@@ -26,6 +26,15 @@ export default class Environment {
 		throw new Error(`Undefined variable ${name.getLexeme()}.`);
 	}
 
+	assignAt(distance: number, name: Token, value) {
+		// @ts-ignore - let this error happen for anaysis
+    this.ancestor(distance).values.set(name.getLexeme(), value);
+	}
+
+	getAt(distance: number, name: string) {
+		// @ts-ignore - let this error happen for anaysis
+		return this.ancestor(distance).values.get(name);
+	}
 
 	get(name: Token) {
 		if (this.values.has(name.getLexeme())) {
@@ -37,5 +46,15 @@ export default class Environment {
 		}
 
     throw new Error("Undefined variable '" + name.getLexeme() + "'.");
+	}
+
+	ancestor(distance: number) {
+		let environment: Environment | null = this;
+    for (let i = 0; i < distance; i++) {
+			// @ts-ignore - let this error happen for anaysis
+      environment = environment.enclosing || null;
+    }
+
+    return environment;
 	}
 }

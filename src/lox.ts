@@ -8,6 +8,7 @@ import { AstPrinter } from "../tools/printer";
 import Parser from "./parser";
 import { exit } from "process";
 import Interpreter from "./interpreter";
+import Resolver from "./resolver";
 
 export function lox(args: string[]) {
   if (args.length > 1) {
@@ -61,9 +62,14 @@ export class Lox {
     let tokens = scanner.scanTokens();
     let parser = new Parser(tokens);
     let statements  = parser.parse();
-    let intepreter = new Interpreter();
 
     // Syntax error
+    if (Lox.hadError) return;
+    let intepreter = new Interpreter();
+    let resolver = new Resolver(intepreter);
+    resolver.resolveMany(statements);
+
+    // Resolution errors
     if (Lox.hadError) return;
 
     // Print the tokens for now

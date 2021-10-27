@@ -11,9 +11,8 @@ import Environment from "./environment";
 
 
 export default class Interpreter implements StatementVisitor, ExpresionVisitor {
-
-
 	globals: Environment = new Environment();
+	locals = new Map();
 	environment: Environment = this.globals;
 
 	constructor() {
@@ -47,6 +46,10 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 			} finally {
 				this.environment = previous;
 			}
+	}
+
+	resolve(expr, depth: number) {
+		this.locals.set(expr, depth);
 	}
 
 	stringify(object) {
@@ -176,8 +179,17 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 		return null;
 	}
 
+	lookupVariable(name, expr: Expr) {
+		let distance = this.locals.get(expr);
+    if (distance != undefined && distance != null) {
+      return this.environment.getAt(distance, name.lexeme);
+    } else {
+      return this.globals.get(name);
+    }
+	}
+
 	visitVariable(expr: Variable) {
-		return this.environment.get(expr.name);
+		return this.lookupVariable(expr.name, expr);
 	}
 
 	visitVar(stmt: Var) {
@@ -193,6 +205,14 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 	visitAssign(expr: Assign) {
 		let value = this.evaluate(expr.value);
 		this.environment.assign(expr.name, value);
+
+		let distance = this.locals.get(expr);
+    if (distance != null) {
+      this.environment.assignAt(distance, expr.name, value);
+    } else {
+      this.globals.assign(expr.name, value);
+    }
+
 		return value;
 	}
 
