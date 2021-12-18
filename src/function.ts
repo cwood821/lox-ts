@@ -7,16 +7,18 @@ import { Func } from "./stmt";
 export class LoxFunction implements LoxCallable {
   private declaration: Func;
 	private closure: Environment;
+	private isInitializer: boolean;
 
-  constructor(declaration: Func, closure: Environment) {
+  constructor(declaration: Func, closure: Environment, isInitializer: boolean) {
     this.declaration = declaration;
 		this.closure = closure;
+		this.isInitializer = isInitializer;
   }
 
 	bind(instance: LoxInstance) {
 		let environment = new Environment(this.closure);
 		environment.define("this", instance);
-		return new LoxFunction(this.declaration, environment);
+		return new LoxFunction(this.declaration, environment, this.isInitializer);
 	}
 
   call(interpreter: Interpreter, args: any[]) {
@@ -30,8 +32,12 @@ export class LoxFunction implements LoxCallable {
 		try {
 			interpreter.executeBlock(this.declaration.body, environment);
 		} catch (returnValue) {
+			// Empty returns in a class return this rather than nil 
+			if (this.isInitializer) return this.closure.getAt(0, "this");
 			return returnValue?.value; 
 		}
+
+		if (this.isInitializer) return this.closure.getAt(0, "this");
 
     return null;
   }

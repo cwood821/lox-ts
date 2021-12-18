@@ -2,6 +2,8 @@ import Interpreter from "./interpreter";
 import LoxInstance from "./instance";
 import { LoxFunction } from "./function";
 
+const CONSTRUCTOR_METHOD = "init";
+
 export default class LoxClass {
 	public name: string;
 	private methods: {[key: string]: LoxFunction} = {};
@@ -12,11 +14,19 @@ export default class LoxClass {
 	}
 
 	arity() {
-		return 0;
+		let initializer = this.findMethod(CONSTRUCTOR_METHOD);
+    if (initializer === null) return 0;
+		return initializer.arity();
 	}
 
 	call(interpreter: Interpreter, args: any[]) {
 		let instance = new LoxInstance(this);
+		let initializer = this.findMethod(CONSTRUCTOR_METHOD);
+
+		if (initializer !== null) {
+			initializer.bind(instance).call(interpreter, args);
+		}
+
 		return instance;
 	}
 

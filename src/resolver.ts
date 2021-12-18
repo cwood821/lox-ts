@@ -7,6 +7,7 @@ import { Lox } from "./lox";
 enum FunctionType {
 	NONE,
 	FUNCTION,
+	INITIALIZER,
 	METHOD
 }
 
@@ -104,7 +105,10 @@ export default class Resolver implements StatementVisitor, ExpresionVisitor {
     scope["this"] = true;
 
 		stmt.methods.forEach(method => {
-			let declaration = FunctionType
+			let declaration = FunctionType.METHOD;
+			if (method.name.getLexeme() === "init") {
+        declaration = FunctionType.INITIALIZER;
+      }
       this.resolveFunction(method, declaration); 
 		})
 
@@ -152,6 +156,9 @@ export default class Resolver implements StatementVisitor, ExpresionVisitor {
     }
 
 		if (stmt.value != null) {
+			if (this.currentFunction == FunctionType.INITIALIZER) {
+        Lox.error(stmt.keyword, "Can't return a value from an initializer.");
+      }
       this.resolve(stmt.value);
     }
 		return null;

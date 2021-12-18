@@ -281,7 +281,7 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 
 		let methods: {[key: string]: LoxFunction} = {};
 		stmt.methods.forEach(method => {
-      let func = new LoxFunction(method, this.environment);
+      let func = new LoxFunction(method, this.environment, method.name.getLexeme() === "init");
       methods[method.name.getLexeme()] = func;
 		})
 
@@ -320,7 +320,7 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 
 	visitFunc(stmt: Func) {
 		// We pass the current environment at time of definition, which is a closure 
-    let func = new LoxFunction(stmt, this.environment);
+    let func = new LoxFunction(stmt, this.environment, false);
     this.environment.define(stmt.name.getLexeme(), func);
     return null;
   }
