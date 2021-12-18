@@ -1,11 +1,13 @@
 import RuntimeError from "./errors/runtime";
-import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical, Call } from "./expr";
+import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical, Call, This } from "./expr";
 import { Stmt, Expression, Print, Visitor as StatementVisitor, Var, Block, If, Func, Ret } from "./stmt";
 import { LoxCallable, Clock, isCallable } from "./callable";
 import { LoxFunction } from "./function";
+import LoxClass from "./class";
 import ReturnException from "./return";
 import { TokenType } from "./types";
 import { Lox } from "./lox";
+import LoxInstance from "./instance";
 import Environment from "./environment";
 
 
@@ -109,7 +111,6 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 
 	visitPrint(stmt: Print) {
 		let value = this.evaluate(stmt.expression);
-		console.log(this.stringify(value));
 		return null;
 	}
 
@@ -181,8 +182,9 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 
 	lookupVariable(name, expr: Expr) {
 		let distance = this.locals.get(expr);
-    if (distance != undefined && distance != null) {
-      return this.environment.getAt(distance, name.lexeme);
+    if (distance !== undefined && distance !== null) {
+      let val = this.environment.getAt(distance, name.lexeme);
+			return val;
     } else {
       return this.globals.get(name);
     }
@@ -273,6 +275,48 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 
     return fun.call(this, args);
   }
+
+	visitClass(stmt) {
+		this.environment.define(stmt.name.lexeme, null);
+
+		let methods: {[key: string]: LoxFunction} = {};
+		stmt.methods.forEach(method => {
+      let func = new LoxFunction(method, this.environment);
+      methods[method.name.getLexeme()] = func;
+		})
+
+    let klass = new LoxClass(stmt.name.lexeme, methods);
+    this.environment.assign(stmt.name, klass);
+    return null;
+	}
+
+	visitGet(expr) {
+		let obj = this.evaluate(expr.object);
+
+    if (obj instanceof LoxInstance) {
+      let res = obj.get(expr.name);
+			return res;
+    }
+
+    throw new RuntimeError(expr.name,
+        "Only instances have properties.");
+	}
+
+	visitExprSet(expr) {
+		let object = this.evaluate(expr.obj);
+
+    if (!(object instanceof LoxInstance)) { 
+      throw new RuntimeError(expr.name, "Only instances have fields.");
+    }
+
+    let value = this.evaluate(expr.value);
+    object.set(expr.name, value);
+    return value;
+	}
+
+	visitThis(expr: This) {
+		return this.lookupVariable(expr.keyword, expr);
+	}
 
 	visitFunc(stmt: Func) {
 		// We pass the current environment at time of definition, which is a closure 

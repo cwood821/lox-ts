@@ -7,6 +7,7 @@ export abstract class Stmt {
 	export interface Visitor {
 visitExpression(expression: Expression) 
 visitBlock(block: Block) 
+visitClass(klass: Class) 
 visitFunc(func: Func) 
 visitIf(ifStmt: If) 
 visitPrint(print: Print) 
@@ -39,6 +40,21 @@ export class Block extends Stmt {
 accept(visitor: Visitor) {
 
 			return visitor.visitBlock(this);
+		}
+}
+
+export class Class extends Stmt {
+  name: Token;
+  methods: Func[];
+  constructor(name: Token, methods: Func[]) {
+		super();
+    this.name = name;
+    this.methods = methods;
+  } 
+
+accept(visitor: Visitor) {
+
+			return visitor.visitClass(this);
 		}
 }
 
@@ -91,14 +107,15 @@ accept(visitor: Visitor) {
 
 export class Ret extends Stmt {
   keyword: Token;
-  value: Expr | null;
-  constructor(keyword: Token, value: Expr | null) {
+  value: Expr;
+  constructor(keyword: Token, value: Expr) {
 		super();
     this.keyword = keyword;
     this.value = value;
   } 
 
 accept(visitor: Visitor) {
+
 			return visitor.visitRet(this);
 		}
 }

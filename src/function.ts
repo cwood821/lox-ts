@@ -1,5 +1,6 @@
 import { LoxCallable } from "./callable";
 import Environment from "./environment";
+import LoxInstance from "./instance";
 import Interpreter from "./interpreter";
 import { Func } from "./stmt";
 
@@ -12,8 +13,15 @@ export class LoxFunction implements LoxCallable {
 		this.closure = closure;
   }
 
+	bind(instance: LoxInstance) {
+		let environment = new Environment(this.closure);
+		environment.define("this", instance);
+		return new LoxFunction(this.declaration, environment);
+	}
+
   call(interpreter: Interpreter, args: any[]) {
     let environment = new Environment(this.closure);
+
     for (let i = 0; i < this.declaration.params.length; i++) {
       environment.define(this.declaration.params[i].getLexeme(), args[i]);
     }

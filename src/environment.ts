@@ -51,7 +51,7 @@ export default class Environment {
 	ancestor(distance: number) {
 		let environment: Environment | null = this;
     for (let i = 0; i < distance; i++) {
-			// @ts-ignore - let this error happen for anaysis
+			// @ts-ignore - let this error happen for analysis 
       environment = environment.enclosing || null;
     }
 

@@ -1,7 +1,7 @@
 import { type } from "os";
 import { checkServerIdentity } from "tls";
-import { Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call } from "./expr";
-import { Stmt, Var, Print, Expression, Block, If, While, Func, Ret } from "./stmt";
+import { Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call, Get, ExprSet, This } from "./expr";
+import { Stmt, Var, Print, Expression, Block, If, While, Func, Ret, Class } from "./stmt";
 import Token from "./token";
 import { TokenType } from "./types";
 import { Lox, parserError } from "./lox"
@@ -73,7 +73,22 @@ export default class Parser {
 		return new Var(name, initializer);
 	}
 
- funDeclaration(kind: string) {
+	classDeclaration() {
+		let name = this.consume(TokenType.IDENTIFIER, "Expect class name.");
+    this.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
+
+		let methods: Func[] = [];
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      methods.push(this.funDeclaration("method"));
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
+
+		// @ts-ignore - error will throw if name is undefined
+    return new Class(name, methods);
+	}
+
+ funDeclaration(kind: string): Func {
 	 let name = this.consume(TokenType.IDENTIFIER, `Expect ${kind} name`)
 
 	 this.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
@@ -99,6 +114,7 @@ export default class Parser {
 
 	declaration() {
 		try {
+			if (this.match(TokenType.CLASS)) { return this.classDeclaration() }
 			if (this.match(TokenType.FUN)) { return this.funDeclaration("function") }
 			if (this.match(TokenType.VAR)) {
 				return this.varDeclaration();
@@ -215,6 +231,7 @@ export default class Parser {
     }
 
     this.consume(TokenType.SEMICOLON, "Expect ';' after return value.");
+		// @ts-ignore - handle null value 
     return new Ret(keyword, value);
 	}
 
@@ -276,6 +293,11 @@ export default class Parser {
 		while (true) {
 			if (this.match(TokenType.LEFT_PAREN)) {
 				expr = this.finishCall(expr);
+			}
+			else if (this.match(TokenType.DOT)) {
+				let name = this.consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+				// @ts-ignore will throw error on undefined
+				expr = new Get(expr, name);
 			} else {
 				break;
 			}
@@ -319,6 +341,8 @@ export default class Parser {
 			return new Grouping(expr);
 		}
 
+		if (this.match(TokenType.THIS)) return new This(this.previous());
+
 		if (this.match(TokenType.IDENTIFIER)) {
 			return new Variable(this.previous());
 		}
@@ -355,6 +379,8 @@ export default class Parser {
 			if (expr instanceof Variable) {
 				let name = expr.name;
 				return new Assign(name, value);
+			} else if (expr instanceof Get) {
+				return new ExprSet(expr.object, expr.name, value);
 			}
 
 			this.error(equals, "Invalid assignment target.");

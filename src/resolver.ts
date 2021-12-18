@@ -1,12 +1,13 @@
-import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical, Call } from "./expr";
-import { Stmt, Expression, Print, Visitor as StatementVisitor, Var, Block, If, Func, Ret } from "./stmt";
+import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical, Call, Get, ExprSet, This } from "./expr";
+import { Stmt, Expression, Print, Visitor as StatementVisitor, Var, Block, If, Func, Ret, Class } from "./stmt";
 import Interpreter from "./interpreter";
 import Token from "./token";
 import { Lox } from "./lox";
 
 enum FunctionType {
 	NONE,
-	FUNCTION
+	FUNCTION,
+	METHOD
 }
 
 export default class Resolver implements StatementVisitor, ExpresionVisitor {
@@ -29,6 +30,8 @@ export default class Resolver implements StatementVisitor, ExpresionVisitor {
 
 	beginScope() {
     this.scopes.push({});
+		// "top" of stack is last element
+		return this.scopes[this.scopes.length - 1];
   }
 
 	endScope() {
@@ -37,7 +40,7 @@ export default class Resolver implements StatementVisitor, ExpresionVisitor {
 
 	declare(name: Token) {
     if (this.scopes.length === 0) return;
-    let scope = this.scopes[0];
+    let scope = this.scopes[this.scopes.length - 1];
 
 		if (scope.hasOwnProperty(name.getLexeme())) {
       Lox.error(name, "Already a variable with this name in this scope."); 
@@ -91,6 +94,39 @@ export default class Resolver implements StatementVisitor, ExpresionVisitor {
 
     this.resolveFunction(stmt, FunctionType.FUNCTION);
     return null;
+	}
+
+	visitClass(stmt: Class) {
+		this.declare(stmt.name);
+    this.define(stmt.name);
+
+		let scope = this.beginScope();
+    scope["this"] = true;
+
+		stmt.methods.forEach(method => {
+			let declaration = FunctionType
+      this.resolveFunction(method, declaration); 
+		})
+
+		this.endScope();
+		
+		return null;
+	}
+
+	visitGet(expr: Get) {
+		this.resolve(expr.object);
+		return null;
+	}
+
+	visitExprSet(expr: ExprSet) {
+		this.resolve(expr.value);
+    this.resolve(expr.obj);
+    return null;
+	}
+
+	visitThis(expr: This) {
+		this.resolveLocal(expr, expr.keyword);
+		return null;
 	}
 
 	visitExpression(stmt) {

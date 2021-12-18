@@ -5,6 +5,9 @@ const types = {
 	"Assign": "name: Token, value: Expr",
 	"Binary": "left: Expr, operator: Token, right: Expr",
 	"Call": "callee: Expr, paren: Token, args: Expr[]",
+	"Get": "object: Expr, name: Token",
+	"ExprSet": "obj: Expr, name: Token, value: Expr",
+	"This": "keyword: Token",
 	"Grouping": "expression: Expr",
 	"Literal": "value: Object",
 	"Logical": "left: Expr, operator: Token, right: Expr",
@@ -15,6 +18,7 @@ const types = {
 const statements = {
 	"Expression": "expression: Expr",
 	"Block": "statements: Stmt[]",
+	"Class": "name: Token, methods: Func[]",
 	"Func": "name: Token, params: Token[], body: Stmt[]",
 	"If": "condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null",
 	"Print": "expression: Expr",
