@@ -1,6 +1,6 @@
 import { type } from "os";
 import { checkServerIdentity } from "tls";
-import { Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call, Get, ExprSet, This } from "./expr";
+import { Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call, Get, ExprSet, This, ExprSuper } from "./expr";
 import { Stmt, Var, Print, Expression, Block, If, While, Func, Ret, Class } from "./stmt";
 import Token from "./token";
 import { TokenType } from "./types";
@@ -75,6 +75,13 @@ export default class Parser {
 
 	classDeclaration() {
 		let name = this.consume(TokenType.IDENTIFIER, "Expect class name.");
+
+		let superclass: Variable | null = null;
+    if (this.match(TokenType.LESS)) {
+      this.consume(TokenType.IDENTIFIER, "Expect superclass name.");
+      superclass = new Variable(this.previous());
+    }
+
     this.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
 
 		let methods: Func[] = [];
@@ -85,7 +92,7 @@ export default class Parser {
     this.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
 
 		// @ts-ignore - error will throw if name is undefined
-    return new Class(name, methods);
+    return new Class(name, superclass, methods);
 	}
 
  funDeclaration(kind: string): Func {
@@ -334,6 +341,15 @@ export default class Parser {
 			// @ts-ignore - literal is possibly undefined; consider how to handle
 			return new Literal(this.previous().literal);
 		}
+
+
+    if (this.match(TokenType.SUPER)) {
+      let keyword = this.previous();
+      this.consume(TokenType.DOT, "Expect '.' after 'super'.");
+      let method = this.consume(TokenType.IDENTIFIER, "Expect superclass method name.");
+			// @ts-ignore - Method will fail
+      return new ExprSuper(keyword, method);
+    }
 
 		if (this.match(TokenType.LEFT_PAREN)) {
 			let expr = this.expression();

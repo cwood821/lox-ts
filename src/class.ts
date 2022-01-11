@@ -6,9 +6,11 @@ const CONSTRUCTOR_METHOD = "init";
 
 export default class LoxClass {
 	public name: string;
+	public superclass: LoxClass | null;
 	private methods: {[key: string]: LoxFunction} = {};
 
-	constructor(name: string, methods: {[key: string]: LoxFunction}) {
+	constructor(name: string, superclass: LoxClass, methods: {[key: string]: LoxFunction}) {
+		this.superclass = superclass;
 		this.name = name;
 		this.methods = methods;
 	}

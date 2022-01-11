@@ -1,7 +1,7 @@
 import Token from "./token";
 
 export default class Environment {
-	private enclosing: Environment | null = null;
+	public enclosing: Environment | null = null;
 	private values: Map<string, object> = new Map();
 
 	constructor(environment: Environment | null = null) {

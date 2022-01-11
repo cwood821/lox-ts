@@ -1,4 +1,4 @@
-import { Expr } from "./expr"; import Token from "./token";
+import { Expr, Variable } from "./expr"; import Token from "./token";
 
 export abstract class Stmt {
 	abstract accept(visitor: Visitor)
@@ -45,10 +45,12 @@ accept(visitor: Visitor) {
 
 export class Class extends Stmt {
   name: Token;
+  superclass: Var;
   methods: Func[];
-  constructor(name: Token, methods: Func[]) {
+  constructor(name: Token, superclass: Var, methods: Func[]) {
 		super();
     this.name = name;
+    this.superclass = superclass;
     this.methods = methods;
   } 
 

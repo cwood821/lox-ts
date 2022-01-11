@@ -1,5 +1,5 @@
 import RuntimeError from "./errors/runtime";
-import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical, Call, This } from "./expr";
+import { Literal, Grouping, Unary, Binary, Expr, Assign, Visitor as ExpresionVisitor, Variable, Logical, Call, This, ExprSuper } from "./expr";
 import { Stmt, Expression, Print, Visitor as StatementVisitor, Var, Block, If, Func, Ret } from "./stmt";
 import { LoxCallable, Clock, isCallable } from "./callable";
 import { LoxFunction } from "./function";
@@ -111,6 +111,7 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 
 	visitPrint(stmt: Print) {
 		let value = this.evaluate(stmt.expression);
+		console.log(value);
 		return null;
 	}
 
@@ -277,7 +278,22 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
   }
 
 	visitClass(stmt) {
+		let superclass;
+		if (stmt.superclass !== null) {
+			superclass = this.evaluate(stmt.superclass);
+			if (!(superclass instanceof LoxClass)) {
+				throw new RuntimeError(stmt.superclass.name, "Superclass must be a class.")
+			}
+		} else {
+			superclass = null;
+		}
+
 		this.environment.define(stmt.name.lexeme, null);
+
+    if (stmt.superclass != null) {
+      this.environment = new Environment(this.environment);
+      this.environment.define("super", superclass);
+    }
 
 		let methods: {[key: string]: LoxFunction} = {};
 		stmt.methods.forEach(method => {
@@ -285,7 +301,13 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
       methods[method.name.getLexeme()] = func;
 		})
 
-    let klass = new LoxClass(stmt.name.lexeme, methods);
+    let klass = new LoxClass(stmt.name.lexeme, superclass, methods);
+
+		if (superclass !== null) {
+			// @ts-ignore - guaranteed
+      this.environment = this.environment.enclosing;
+    }
+
     this.environment.assign(stmt.name, klass);
     return null;
 	}
@@ -330,6 +352,19 @@ export default class Interpreter implements StatementVisitor, ExpresionVisitor {
 		if (stmt.value != null) value = this.evaluate(stmt.value);
 
 		throw new ReturnException(value);
+	}
+
+	visitExprSuper(expr: ExprSuper) {
+			let distance = this.locals.get(expr);
+			let superclass = this.environment.getAt(distance, "super") as LoxClass;
+			let object = this.environment.getAt(distance - 1, "this") as LoxInstance;
+			let method = superclass.findMethod(expr.method.getLexeme())
+
+			if (method === null) {
+				throw new RuntimeError(expr.method, "Undefined property '" + expr.method.getLexeme() + "'.");
+			}
+
+			return method?.bind(object)
 	}
 
 }

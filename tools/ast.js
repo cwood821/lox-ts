@@ -7,6 +7,7 @@ const types = {
 	"Call": "callee: Expr, paren: Token, args: Expr[]",
 	"Get": "object: Expr, name: Token",
 	"ExprSet": "obj: Expr, name: Token, value: Expr",
+	"ExprSuper": "keyword: Token, method: Token",
 	"This": "keyword: Token",
 	"Grouping": "expression: Expr",
 	"Literal": "value: Object",
@@ -18,7 +19,8 @@ const types = {
 const statements = {
 	"Expression": "expression: Expr",
 	"Block": "statements: Stmt[]",
-	"Class": "name: Token, methods: Func[]",
+	// Note superclass is a variable not a token
+	"Class": "name: Token, superclass: Variable, methods: Func[]",
 	"Func": "name: Token, params: Token[], body: Stmt[]",
 	"If": "condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null",
 	"Print": "expression: Expr",
